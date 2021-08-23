@@ -1,0 +1,45 @@
+{
+    "ABI version": 2,
+    "header": ["time"],
+    "functions": [{
+            "name": "constructor",
+            "inputs": [
+                { "name": "tokenAmount", "type": "uint32" }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "uploadToken",
+            "inputs": [
+                { "name": "tokenID", "type": "uint32" },
+                { "name": "token", "type": "cell" }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "getOwnerOf",
+            "inputs": [
+                { "name": "_answer_id", "type": "uint32" },
+                { "name": "tokenID", "type": "uint32" }
+            ],
+            "outputs": [
+                { "name": "value0", "type": "address" }
+            ]
+        },
+        {
+            "name": "mintToken",
+            "inputs": [],
+            "outputs": []
+        },
+        {
+            "name": "transferTokenTo",
+            "inputs": [
+                { "name": "tokenID", "type": "uint32" },
+                { "name": "receiver", "type": "address" }
+            ],
+            "outputs": []
+        }
+    ],
+    "data": [],
+    "events": []
+}

@@ -118,7 +118,7 @@ contract ERC721 {
 
     function _payoutReferal(address receiver, uint128 valueToTransfer) external pure onlySelf {
         tvm.accept();
-        address(receiver).transfer({value: valueToTransfer});
+        address(receiver).transfer({value: valueToTransfer, flag: 1});
     }
 
     function transferTokenTo(uint32 tokenID, address receiver) external {

@@ -23,7 +23,7 @@ async function main() {
     ercContract = extendContractToERC721(ercContract);
 
     let payload = await ercContract.withdrawExtraTons({
-        tonsToWithdraw: convertCrystal(22, 'nano')
+        tonsToWithdraw: convertCrystal(28.1, 'nano')
     });
 
     await msigWallet.transfer({

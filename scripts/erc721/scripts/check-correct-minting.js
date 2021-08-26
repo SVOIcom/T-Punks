@@ -36,12 +36,12 @@ async function main() {
 
     console.log(Object.keys(await ercContract.getUserNfts({ collector: msigWallet.address })).length);
 
-    let result = await ercContract.getUserNfts({ collector: msigWallet.address });
-    for (let i = 0; i < 1; i++) {
-        if (!result[i]) {
-            console.log(`${i} - not minted`)
-        }
-    }
+    // let result = await ercContract.getUserNfts({ collector: msigWallet.address });
+    // for (let i = 0; i < 1; i++) {
+    //     if (!result[i]) {
+    //         console.log(`${i} - not minted`)
+    //     }
+    // }
 }
 
 main().then(

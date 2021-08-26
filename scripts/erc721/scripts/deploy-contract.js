@@ -7,47 +7,50 @@ async function main() {
     let ercContract = await locklift.factory.getContract('ERC721', configuration.buildDirectory);
     let msigWallet = await loadContractData(locklift, configuration, `${configuration.network}_MsigWallet.json`);
 
-    // console.log(await locklift.ton.createDeployMessage({
-    //     contract: ercContract,
-    //     constructorParams: {
-    //         owner_: msigWallet.address
-    //     },
-    //     initParams: {},
-    //     keyPair: msigWallet.keyPair,
-    // }));
+    if (configuration.network != 'local') {
+        console.log(await locklift.ton.createDeployMessage({
+            contract: ercContract,
+            constructorParams: {
+                owner_: msigWallet.address
+            },
+            initParams: {},
+            keyPair: msigWallet.keyPair,
+        }));
 
-    // const {
-    //     address,
-    // } = await locklift.ton.createDeployMessage({
-    //     contract: ercContract,
-    //     constructorParams: {
-    //         owner_: msigWallet.address
-    //     },
-    //     initParams: {},
-    //     keyPair: msigWallet.keyPair,
-    // });
+        const {
+            address,
+        } = await locklift.ton.createDeployMessage({
+            contract: ercContract,
+            constructorParams: {
+                owner_: msigWallet.address
+            },
+            initParams: {},
+            keyPair: msigWallet.keyPair,
+        });
 
-    // const message = await locklift.ton.createDeployMessage({
-    //     contract: ercContract,
-    //     constructorParams: {
-    //         owner_: msigWallet.address
-    //     },
-    //     initParams: {},
-    //     keyPair: msigWallet.keyPair,
-    // });
+        const message = await locklift.ton.createDeployMessage({
+            contract: ercContract,
+            constructorParams: {
+                owner_: msigWallet.address
+            },
+            initParams: {},
+            keyPair: msigWallet.keyPair,
+        });
 
-    // await locklift.ton.waitForRunTransaction({ message, abi: ercContract.abi });
+        await locklift.ton.waitForRunTransaction({ message, abi: ercContract.abi });
 
-    // ercContract.setAddress(address);
+        ercContract.setAddress(address);
+    } else {
 
-    await locklift.giver.deployContract({
-        contract: ercContract,
-        constructorParams: {
-            owner_: msigWallet.address
-        },
-        initParams: {},
-        keyPair: msigWallet.keyPair
-    });
+        await locklift.giver.deployContract({
+            contract: ercContract,
+            constructorParams: {
+                owner_: msigWallet.address
+            },
+            initParams: {},
+            keyPair: msigWallet.keyPair
+        });
+    }
 
     await writeContractData(ercContract, `ERC721.json`);
 }

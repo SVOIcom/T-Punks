@@ -55,6 +55,15 @@
 			]
 		},
 		{
+			"name": "_payoutReferal",
+			"inputs": [
+				{"name":"receiver","type":"address"},
+				{"name":"valueToTransfer","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "transferTokenTo",
 			"inputs": [
 				{"name":"tokenID","type":"uint32"},

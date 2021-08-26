@@ -59,8 +59,10 @@ contract ERC721 {
         require(msg.value >= priceForSale, ERC721ErrorCodes.ERROR_MSG_VALUE_IS_TOO_LOW);
         tvm.accept();
         uint32 tokensToMint = uint32(msg.value/priceForSale);
-        uint128 tokenValue = tokensToMint*priceForSale;
-        address(referal).transfer({value: tokenValue * referalNominator / referalDenominator});
+        if (referal.value != 0) {
+            uint128 tokenValue = tokensToMint*priceForSale;
+            ERC721(address(this))._payoutReferal(referal, tokenValue*referalNominator/referalDenominator);
+        }
 
         ERC721(address(this))._mintToken(msg.sender, tokensToMint, tokensToMint);
 
@@ -112,6 +114,11 @@ contract ERC721 {
             }
         }
         return index;
+    }
+
+    function _payoutReferal(address receiver, uint128 valueToTransfer) external pure onlySelf {
+        tvm.accept();
+        address(receiver).transfer({value: valueToTransfer});
     }
 
     function transferTokenTo(uint32 tokenID, address receiver) external {

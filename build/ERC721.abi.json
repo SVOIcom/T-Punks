@@ -1,45 +1,155 @@
 {
-    "ABI version": 2,
-    "header": ["time"],
-    "functions": [{
-            "name": "constructor",
-            "inputs": [
-                { "name": "tokenAmount", "type": "uint32" }
-            ],
-            "outputs": []
-        },
-        {
-            "name": "uploadToken",
-            "inputs": [
-                { "name": "tokenID", "type": "uint32" },
-                { "name": "token", "type": "cell" }
-            ],
-            "outputs": []
-        },
-        {
-            "name": "getOwnerOf",
-            "inputs": [
-                { "name": "_answer_id", "type": "uint32" },
-                { "name": "tokenID", "type": "uint32" }
-            ],
-            "outputs": [
-                { "name": "value0", "type": "address" }
-            ]
-        },
-        {
-            "name": "mintToken",
-            "inputs": [],
-            "outputs": []
-        },
-        {
-            "name": "transferTokenTo",
-            "inputs": [
-                { "name": "tokenID", "type": "uint32" },
-                { "name": "receiver", "type": "address" }
-            ],
-            "outputs": []
-        }
-    ],
-    "data": [],
-    "events": []
+	"ABI version": 2,
+	"header": ["time"],
+	"functions": [
+		{
+			"name": "constructor",
+			"inputs": [
+				{"name":"owner_","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "uploadToken",
+			"inputs": [
+				{"name":"tokenID","type":"uint32"},
+				{"components":[{"name":"id","type":"uint32"},{"name":"punkType","type":"bytes"},{"name":"attributes","type":"bytes"},{"name":"rank","type":"uint32"}],"name":"punkInfo","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "startSell",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getOwnerOf",
+			"inputs": [
+				{"name":"_answer_id","type":"uint32"},
+				{"name":"tokenID","type":"uint32"}
+			],
+			"outputs": [
+				{"name":"value0","type":"address"}
+			]
+		},
+		{
+			"name": "mintToken",
+			"inputs": [
+				{"name":"referal","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "_mintToken",
+			"inputs": [
+				{"name":"mintTo","type":"address"},
+				{"name":"amountLeftToMint","type":"uint32"},
+				{"name":"originalTokenAmount","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "transferTokenTo",
+			"inputs": [
+				{"name":"tokenID","type":"uint32"},
+				{"name":"receiver","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getAllNfts",
+			"inputs": [
+				{"name":"_answer_id","type":"uint32"}
+			],
+			"outputs": [
+				{"components":[{"name":"id","type":"uint32"},{"name":"punkType","type":"bytes"},{"name":"attributes","type":"bytes"},{"name":"rank","type":"uint32"}],"name":"value0","type":"map(uint32,tuple)"}
+			]
+		},
+		{
+			"name": "getUserNfts",
+			"inputs": [
+				{"name":"_answer_id","type":"uint32"},
+				{"name":"collector","type":"address"}
+			],
+			"outputs": [
+				{"name":"value0","type":"map(uint32,bool)"}
+			]
+		},
+		{
+			"name": "getNft",
+			"inputs": [
+				{"name":"_answer_id","type":"uint32"},
+				{"name":"nftID","type":"uint32"}
+			],
+			"outputs": [
+				{"components":[{"name":"id","type":"uint32"},{"name":"punkType","type":"bytes"},{"name":"attributes","type":"bytes"},{"name":"rank","type":"uint32"}],"name":"value0","type":"tuple"},
+				{"name":"collector","type":"address"}
+			]
+		},
+		{
+			"name": "getTokenSupplyInfo",
+			"inputs": [
+				{"name":"_answer_id","type":"uint32"}
+			],
+			"outputs": [
+				{"name":"tokenAmount","type":"uint32"},
+				{"name":"notMintedTokens","type":"uint32"}
+			]
+		},
+		{
+			"name": "getTokenPrice",
+			"inputs": [
+				{"name":"_answer_id","type":"uint32"}
+			],
+			"outputs": [
+				{"name":"value0","type":"uint128"}
+			]
+		},
+		{
+			"name": "setBuyPrice",
+			"inputs": [
+				{"name":"priceForSale_","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "setReferalParams",
+			"inputs": [
+				{"name":"refNom","type":"uint128"},
+				{"name":"refDenom","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getReferalParams",
+			"inputs": [
+				{"name":"_answer_id","type":"uint32"}
+			],
+			"outputs": [
+				{"name":"value0","type":"uint128"},
+				{"name":"value1","type":"uint128"}
+			]
+		},
+		{
+			"name": "withdrawExtraTons",
+			"inputs": [
+				{"name":"tonsToWithdraw","type":"uint128"}
+			],
+			"outputs": [
+			]
+		}
+	],
+	"data": [
+	],
+	"events": [
+	]
 }

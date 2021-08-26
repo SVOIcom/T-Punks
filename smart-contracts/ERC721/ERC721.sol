@@ -1,73 +1,181 @@
 pragma ton-solidity >= 0.43.0;
 
-contract ERC721 {
+import './interfaces/IERC721.sol';
 
-    mapping(uint32 => TvmCell) tokens;
+import './libraries/ArrayFunctions.sol';
+import './libraries/ERC721ErrorCodes.sol';
+
+// TODO: рефералка на перевод % с тонов
+
+contract ERC721 {
+    mapping(uint32 => Punk) tokens;
+    address owner;
     uint32 nftAmount;
     uint32 tokensLeft;
     uint32 totalTokens;
-    uint32 lastMinted;
+    uint128 priceForSale;
+    uint128 referalNominator;
+    uint128 referalDenominator;
+    bool readyForSale;
     mapping(uint32 => address) nftOwner;
+    mapping(address => mapping(uint32 => bool)) collections;
     mapping(uint32 => bool) freeTokens;
 
-    constructor(uint32 tokenAmount) public {
+    constructor(address owner_) public {
         tvm.accept();
         rnd.shuffle();
-        lastMinted = rnd.next(uint32(tokenAmount));
-        tokensLeft = tokenAmount;
+        readyForSale = false;
+        owner = owner_;
+        priceForSale = 1 ton;
         totalTokens = 0;
+        tokensLeft = 0;
+        nftAmount = 0;
+        referalNominator = 10;
+        referalDenominator = 100;
     }
 
-    function uploadToken(uint32 tokenID, TvmCell token) external {
+    function uploadToken(uint32 tokenID, Punk punkInfo) external onlyOwner {
         tvm.rawReserve(msg.value, 2);
-        tokens[tokenID] = token;
+        tokens[tokenID] = punkInfo;
         freeTokens[tokenID] = true;
+        totalTokens += 1;
+        tokensLeft += 1;
+        address(owner).transfer({value: 0, flag: 64});
+    }
+
+    function startSell() external onlyOwner {
+        tvm.rawReserve(msg.value, 2);
+        readyForSale = true;
+        address(owner).transfer({value: 0, flag: 64});
     }
 
     function getOwnerOf(uint32 tokenID) external responsible view returns(address) {
         return {flag: 64} nftOwner[tokenID];
     }
 
-    function mintToken() external {
-        require(tokensLeft > 0);
-        require(msg.value >= 250 ton);
-        tvm.rawReserve(1 ton, 2);
-        uint32 tokenIDToMint = _getMintedID();
-        lastMinted = tokenIDToMint;
-        tokensLeft -= 1;
-        totalTokens += 1;
-        delete freeTokens[tokenIDToMint];
+    function mintToken(address referal) external view {
+        require(readyForSale, ERC721ErrorCodes.ERROR_SALE_IS_NOT_STARTED);
+        require(tokensLeft > 0, ERC721ErrorCodes.ERROR_NO_TOKENS_LEFT);
+        require(msg.value >= priceForSale, ERC721ErrorCodes.ERROR_MSG_VALUE_IS_TOO_LOW);
+        tvm.accept();
+        uint32 tokensToMint = uint32(msg.value/priceForSale);
+        uint128 tokenValue = tokensToMint*priceForSale;
+        address(referal).transfer({value: tokenValue * referalNominator / referalDenominator});
 
-        nftOwner[tokenIDToMint] = msg.sender;
-        address(msg.sender).transfer({value: 0, flag: 64});
+        ERC721(address(this))._mintToken(msg.sender, tokensToMint, tokensToMint);
+
     }
 
-    function _getMintedID() internal view returns (uint32) {
-        uint8 iterations = rnd.next(uint8(10));
-        uint32 index = lastMinted;
-        if (iterations > tokensLeft) {
-            iterations = uint8(tokensLeft);
+    function _mintToken(address mintTo, uint32 amountLeftToMint, uint32 originalTokenAmount) external onlySelf {
+        if (amountLeftToMint > 0) {
+            tvm.accept();
+            uint32 tokenIDToMint = _getMintedID();
+
+            while (!freeTokens[tokenIDToMint]) {
+                tokenIDToMint = _getMintedID();
+            }
+
+            nftAmount += 1;
+            tokensLeft -= 1;
+            delete freeTokens[tokenIDToMint];
+
+            nftOwner[tokenIDToMint] = mintTo;
+            collections[mintTo][tokenIDToMint] = true;
+            ERC721(address(this))._mintToken(mintTo, amountLeftToMint - 1, originalTokenAmount);
         }
-        repeat(iterations) {
-            optional(uint32, bool) currentToken = freeTokens.next(index);
-            if (currentToken.hasValue()) {
-                (uint32 currentIndex, ) = currentToken.get();
-                index = currentIndex;
+    } 
+
+    function _getMintedID() internal view returns (uint32) {
+        rnd.shuffle();
+        uint32 index = rnd.next(uint32(totalTokens));
+        rnd.shuffle();
+        uint8 iterations = rnd.next(uint8(10));
+        if (tokensLeft < iterations) {
+            optional(uint32, bool) returnIndex = freeTokens.nextOrEq(index);
+            if (returnIndex.hasValue()) {
+                (index, ) = returnIndex.get(); 
             } else {
-                optional(uint32, bool) minToken = freeTokens.min();
-                (uint32 currentIndex, ) = minToken.get();
-                index = currentIndex;
+                optional(uint32, bool) minIndex = freeTokens.min();
+                (index, ) = minIndex.get();
+            }
+        } else {
+            repeat(iterations) {
+                optional(uint32, bool) currentToken = freeTokens.nextOrEq(index);
+                if (currentToken.hasValue()) {
+                    (uint32 currentIndex, ) = currentToken.get();
+                    index = currentIndex;
+                } else {
+                    optional(uint32, bool) minToken = freeTokens.min();
+                    (uint32 currentIndex, ) = minToken.get();
+                    index = currentIndex;
+                }
             }
         }
         return index;
     }
 
     function transferTokenTo(uint32 tokenID, address receiver) external {
-        require(msg.value >= 1 ton);
+        require(msg.value >= 0.5 ton, ERC721ErrorCodes.ERROR_MSG_VALUE_IS_TOO_LOW);
+        require(nftOwner[tokenID] == msg.sender, ERC721ErrorCodes.ERROR_MSG_SENDER_IS_NOT_NFT_OWNER);
         tvm.rawReserve(msg.value, 2);
-        if (nftOwner[tokenID] == msg.sender) {
-            nftOwner[tokenID] = receiver; 
-        }
+
+        collections[msg.sender][tokenID] = false;
+
+        nftOwner[tokenID] = receiver;
+
+        collections[receiver][tokenID] = true;
         address(msg.sender).transfer({flag: 64, value: 0});
+    }
+
+    function getAllNfts() external responsible view returns(mapping(uint32 => Punk)) {
+        return {flag: 64} tokens;
+    }
+
+    function getUserNfts(address collector) external responsible view returns(mapping(uint32 => bool)) {
+        return {flag: 64} collections[collector];
+    }
+
+    function getNft(uint32 nftID) external responsible view returns(Punk, address collector) {
+        return {flag: 64} (tokens[nftID], nftOwner[nftID]);
+    }
+
+    function getTokenSupplyInfo() external responsible view returns(uint32 tokenAmount, uint32 notMintedTokens) {
+        return {flag: 64} (nftAmount, tokensLeft);
+    }
+
+    function getTokenPrice() external responsible view returns(uint128) {
+        return {flag: 64} priceForSale;
+    } 
+
+    function setBuyPrice(uint128 priceForSale_) external onlyOwner {
+        tvm.accept();
+        priceForSale = priceForSale_;
+        address(owner).transfer({value: 0, flag: 64});
+    }
+
+    function setReferalParams(uint128 refNom, uint128 refDenom) external onlyOwner {
+        tvm.accept();
+        referalNominator = refNom;
+        referalDenominator = refDenom;
+        address(owner).transfer({value: 0, flag: 64});
+    }
+
+    function getReferalParams() external responsible view returns (uint128, uint128) {
+        return {flag: 64} (referalNominator, referalDenominator);
+    }
+
+    function withdrawExtraTons(uint128 tonsToWithdraw) external view onlyOwner {
+        tvm.accept();
+        address(owner).transfer({value: tonsToWithdraw, flag: 64});
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, ERC721ErrorCodes.ERROR_MSG_SENDER_IS_NOT_OWNER);
+        _;
+    }
+
+    modifier onlySelf() {
+        require(msg.sender == address(this));
+        _;
     }
 }

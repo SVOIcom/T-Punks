@@ -25,6 +25,16 @@ class ERC721 extends Contract {
     async setBuyPrice({ priceForSale_ }) {}
 
     async withdrawExtraTons({ tonsToWithdraw }) {}
+
+    async setForSale({ tokenID, tokenPrice }) {}
+
+    async setAsNotForSale({ tokenID }) {}
+
+    async buyToken({ tokenID }) {}
+
+    async getAllTokensForSale() {}
+
+    async getSellInfo({ tokenID }) {}
 }
 
 
@@ -145,6 +155,55 @@ function extendContractToERC721(contract) {
             input: {
                 tonsToWithdraw
             }
+        });
+    }
+
+    contract.setForSale = async function({ tokenID, tokenPrice }) {
+        return await encodeMessageBody({
+            contract: contract,
+            functionName: 'setForSale',
+            input: {
+                tokenID,
+                tokenPrice
+            }
+        });
+    }
+
+    contract.setAsNotForSale = async function({ tokenID }) {
+        return await encodeMessageBody({
+            contract: contract,
+            functionName: 'setAsNotForSale',
+            input: {
+                tokenID
+            }
+        });
+    }
+
+    contract.buyToken = async function({ tokenID }) {
+        return await encodeMessageBody({
+            contract: contract,
+            functionName: 'buyToken',
+            input: {
+                tokenID
+            }
+        });
+    }
+
+    contract.getAllTokensForSale = async function() {
+        return await contract.call({
+            method: 'getAllTokensForSale',
+            params: {},
+            keyPair: contract.keyPair
+        });
+    }
+
+    contract.getSellInfo = async function({ tokenID }) {
+        return await contract.call({
+            method: 'getAllTokensForSale',
+            params: {
+                tokenID
+            },
+            keyPair: contract.keyPair
         });
     }
 

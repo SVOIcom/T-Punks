@@ -24,7 +24,7 @@ async function main() {
 
     const punks = require('../../../punks.json');
 
-    let uploadCount = 100;
+    let uploadCount = 300;
     let currentUpload = 0;
 
     for (let p of punks) {

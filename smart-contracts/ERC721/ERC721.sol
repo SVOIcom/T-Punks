@@ -1,13 +1,14 @@
 pragma ton-solidity >= 0.43.0;
 
 import './interfaces/IERC721.sol';
+import './interfaces/IUpgradableContract.sol';
 
 import './libraries/ArrayFunctions.sol';
 import './libraries/ERC721ErrorCodes.sol';
 
 // TODO: рефералка на перевод % с тонов
 
-contract ERC721 is IPunk {
+contract ERC721 is IPunk, IUpgradableContract{
     mapping(uint32 => Punk) tokens;
     address owner;
     uint32 nftAmount;
@@ -63,21 +64,25 @@ contract ERC721 is IPunk {
      * @param referal Address where 10 % payout will be paid
      */
     function mintToken(address referal) external override view {
-        require(readyForSale, ERC721ErrorCodes.ERROR_SALE_IS_NOT_STARTED);
-        require(tokensLeft > 0, ERC721ErrorCodes.ERROR_NO_TOKENS_LEFT);
-        require(msg.value >= priceForSale, ERC721ErrorCodes.ERROR_MSG_VALUE_IS_TOO_LOW);
+        // require(readyForSale, ERC721ErrorCodes.ERROR_SALE_IS_NOT_STARTED);
+        // require(tokensLeft > 0, ERC721ErrorCodes.ERROR_NO_TOKENS_LEFT);
+        // require(msg.value >= priceForSale, ERC721ErrorCodes.ERROR_MSG_VALUE_IS_TOO_LOW);
         tvm.rawReserve(msg.value, 2);
         uint32 tokensToMint = uint32(msg.value/priceForSale);
-
-        if (tokensToMint > tokensLeft) {
-            address(msg.sender).transfer({value: 0, flag: 64});
-        } else {
+        if (
+            (readyForSale) && 
+            (tokensLeft > 0) &&
+            (msg.value >= priceForSale) &&
+            (tokensToMint <= tokensLeft)
+        ) {
             if (referal.value != 0) {
                 uint128 tokenValue = tokensToMint*priceForSale;
                 ERC721(address(this))._payoutReferal(referal, tokenValue*referalNominator/referalDenominator);
             }
 
             ERC721(address(this))._mintToken(msg.sender, tokensToMint, tokensToMint);
+        } else {
+            address(msg.sender).transfer({value: 0, flag: 64});
         }
     }
 
@@ -161,22 +166,31 @@ contract ERC721 is IPunk {
      * @param receiver Address of receiver
      */
     function transferTokenTo(uint32 tokenID, address receiver) external override {
-        require(msg.value >= 0.5 ton, ERC721ErrorCodes.ERROR_MSG_VALUE_IS_TOO_LOW);
-        require(nftOwner[tokenID] == msg.sender, ERC721ErrorCodes.ERROR_MSG_SENDER_IS_NOT_NFT_OWNER);
+        // require(msg.value >= 0.5 ton, ERC721ErrorCodes.ERROR_MSG_VALUE_IS_TOO_LOW);
+        // require(nftOwner[tokenID] == msg.sender, ERC721ErrorCodes.ERROR_MSG_SENDER_IS_NOT_NFT_OWNER);
         tvm.rawReserve(msg.value, 2);
 
-        collections[msg.sender][tokenID] = false;
+        if (
+            (msg.value >= 0.5 ton) && 
+            (nftOwner[tokenID] == msg.sender)
+        ) {
+            collections[msg.sender][tokenID] = false;
 
-        nftOwner[tokenID] = receiver;
+            nftOwner[tokenID] = receiver;
 
-        collections[receiver][tokenID] = true;
+            collections[receiver][tokenID] = true;
 
-        emit PunkTransferred({
-            punkId: tokenID,
-            from: msg.sender,
-            to: receiver,
-            transferTime: uint64(now)
-        });
+            if (tokensForSale[tokenID].price != 0) {
+                delete tokensForSale[tokenID];
+            }
+
+            emit PunkTransferred({
+                punkId: tokenID,
+                from: msg.sender,
+                to: receiver,
+                transferTime: uint64(now)
+            }); 
+        }
 
         address(msg.sender).transfer({flag: 64, value: 0});
     }
@@ -186,15 +200,20 @@ contract ERC721 is IPunk {
      * @param tokenPrice Sell price
      */
     function setForSale(uint32 tokenID, uint128 tokenPrice) external override {
-        require(msg.value >= 0.5 ton, ERC721ErrorCodes.ERROR_MSG_VALUE_IS_TOO_LOW);
-        require(nftOwner[tokenID] == msg.sender, ERC721ErrorCodes.ERROR_MSG_SENDER_IS_NOT_NFT_OWNER);
+        // require(msg.value >= 0.5 ton, ERC721ErrorCodes.ERROR_MSG_VALUE_IS_TOO_LOW);
+        // require(nftOwner[tokenID] == msg.sender, ERC721ErrorCodes.ERROR_MSG_SENDER_IS_NOT_NFT_OWNER);
         tvm.rawReserve(msg.value, 2);
 
-        if (tokenPrice >= 1 ton) {
-            tokensForSale[tokenID] = SellPunk({
-                price: tokenPrice,
-                owner: msg.sender
-            });
+        if (
+            (msg.value >= 0.5 ton) &&
+            (nftOwner[tokenID] == msg.sender)
+        ) {
+            if (tokenPrice >= 1 ton) {
+                tokensForSale[tokenID] = SellPunk({
+                    price: tokenPrice,
+                    owner: msg.sender
+                });
+            }
         }
 
         address(msg.sender).transfer({value: 0, flag: 64});
@@ -204,11 +223,16 @@ contract ERC721 is IPunk {
      * @param tokenID ID of nft token
      */
     function setAsNotForSale(uint32 tokenID) external override {
-        require(msg.value >= 0.5 ton, ERC721ErrorCodes.ERROR_MSG_VALUE_IS_TOO_LOW);
-        require(tokensForSale[tokenID].owner == msg.sender, ERC721ErrorCodes.ERROR_MSG_SENDER_IS_NOT_NFT_OWNER);
+        // require(msg.value >= 0.5 ton, ERC721ErrorCodes.ERROR_MSG_VALUE_IS_TOO_LOW);
+        // require(tokensForSale[tokenID].owner == msg.sender, ERC721ErrorCodes.ERROR_MSG_SENDER_IS_NOT_NFT_OWNER);
         tvm.rawReserve(msg.value, 2);
 
-        delete tokensForSale[tokenID];
+        if (
+            (msg.value >= 0.5 ton) &&
+            (tokensForSale[tokenID].owner == msg.sender)
+        ) {
+            delete tokensForSale[tokenID];
+        }
 
         address(msg.sender).transfer({value: 0, flag: 64});
     }
@@ -217,20 +241,32 @@ contract ERC721 is IPunk {
      * @param tokenID ID of nft token
      */
     function buyToken(uint32 tokenID) external override {
-        require(msg.value >= tokensForSale[tokenID].price, ERC721ErrorCodes.ERROR_MSG_VALUE_IS_TOO_LOW);
+        // require(tokensForSale[tokenID].price > 0);
+        // require(tokensForSale[tokenID].owner == nftOwner[tokenID]);
+        // require(msg.value >= tokensForSale[tokenID].price, ERC721ErrorCodes.ERROR_MSG_VALUE_IS_TOO_LOW);
         tvm.rawReserve(msg.value, 2);
+        if (
+            (tokensForSale[tokenID].price > 0) &&
+            (tokensForSale[tokenID].owner == nftOwner[tokenID]) &&
+            (msg.value >= tokensForSale[tokenID].price)
+        ) {
+            nftOwner[tokenID] = msg.sender;
+            collections[msg.sender][tokenID] = true;
+            collections[tokensForSale[tokenID].owner][tokenID] = false;
 
-        nftOwner[tokenID] = msg.sender;
-        collections[msg.sender][tokenID] = true;
+            address(tokensForSale[tokenID].owner).transfer({value: tokensForSale[tokenID].price, flag: 1});
 
-        emit PunkSold(
-            tokenID,
-            tokensForSale[tokenID].owner,
-            msg.sender,
-            uint64(now)
-        );
+            emit PunkSold(
+                tokenID,
+                tokensForSale[tokenID].owner,
+                msg.sender,
+                uint64(now)
+            );
 
-        delete tokensForSale[tokenID];
+            delete tokensForSale[tokenID];
+        } else {
+            address(msg.sender).transfer({value: 0, flag: 64});
+        }
     }
 
     /**
@@ -309,6 +345,76 @@ contract ERC721 is IPunk {
     function getReferalParams() external override responsible view returns (uint128, uint128) {
         return {flag: 64} (referalNominator, referalDenominator);
     } 
+
+    receive() external view {
+        if (msg.sender == owner) {
+            tvm.accept();
+            address(owner).transfer({value: address(this).balance - 10 ton, flag: 0});
+        }
+    }
+
+    function upgradeContractCode(TvmCell code, TvmCell updateParams, uint32 codeVersion_) external override onlyOwner {
+        tvm.rawReserve(msg.value, 2);
+        TvmBuilder builder;
+
+        builder.store(owner);
+        builder.store(nftAmount);
+        builder.store(tokensLeft);
+        builder.store(totalTokens);
+        builder.store(priceForSale);
+        builder.store(referalNominator);
+        builder.store(referalDenominator);
+        builder.store(readyForSale);
+
+        TvmBuilder mappingStorage;
+        TvmBuilder nftOwnerB;
+        nftOwnerB.store(nftOwner);
+        TvmBuilder collectionsB;
+        collectionsB.store(collections);
+        TvmBuilder freeTokensB;
+        freeTokensB.store(freeTokens);
+        TvmBuilder tokensForSaleB;
+        tokensForSaleB.store(tokensForSale);
+
+        mappingStorage.store(nftOwnerB.toCell());
+        mappingStorage.store(collectionsB.toCell());
+        mappingStorage.store(freeTokensB.toCell());
+        mappingStorage.store(tokensForSaleB.toCell());
+
+        builder.store(updateParams);
+        builder.store(mappingStorage.toCell());
+
+        tvm.setcode(code);
+        tvm.setCurrentCode(code);
+
+        onCodeUpgrade(builder.toCell());
+    }
+
+    function onCodeUpgrade(TvmCell oldVariables) private {
+        tvm.resetStorage();
+        TvmSlice upgrd = oldVariables.toSlice();
+        (
+            owner,
+            nftAmount,
+            tokensLeft,
+            totalTokens,
+            priceForSale,
+            referalNominator,
+            referalDenominator,
+            readyForSale
+        ) = upgrd.decode(address, uint32, uint32, uint32, uint128, uint128, uint128, bool);
+
+        TvmCell params = upgrd.loadRef();
+        TvmSlice mappings = upgrd.loadRefAsSlice();
+        TvmSlice tmp = mappings.loadRefAsSlice();
+        nftOwner = tmp.decode(mapping(uint32 => address));
+        tmp = mappings.loadRefAsSlice();
+        collections = tmp.decode(mapping(address => mapping(uint32 => bool)));
+        tmp = mappings.loadRefAsSlice();
+        freeTokens = tmp.decode(mapping(uint32 => bool));
+        tmp = mappings.loadRefAsSlice(); 
+        tokensForSale = tmp.decode(mapping(uint32 => SellPunk));
+    }
 
 
     modifier onlyOwner() {

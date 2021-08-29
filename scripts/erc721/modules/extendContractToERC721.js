@@ -35,6 +35,8 @@ class ERC721 extends Contract {
     async getAllTokensForSale() {}
 
     async getSellInfo({ tokenID }) {}
+
+    async upgradeContractCode({ code, updateParams, codeVersion_ }) {}
 }
 
 
@@ -207,6 +209,17 @@ function extendContractToERC721(contract) {
         });
     }
 
+    contract.upgradeContractCode = async function({ code, updateParams, codeVersion_ }) {
+        return await encodeMessageBody({
+            contract: contract,
+            functionName: 'upgradeContractCode',
+            input: {
+                code,
+                updateParams,
+                codeVersion_
+            }
+        });
+    }
     return contract;
 }
 

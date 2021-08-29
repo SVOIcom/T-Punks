@@ -22,41 +22,34 @@ async function main() {
     let ercContract = await loadContractData(locklift, configuration, `${configuration.network}_ERC721.json`);
     ercContract = extendContractToERC721(ercContract);
 
-    await msigWallet.transfer({
-        destination: ercContract.address,
-        value: convertCrystal(1, 'nano'),
-        flags: operationFlags.FEE_FROM_CONTRACT_BALANCE,
-        bounce: true,
-        payload: await ercContract.setForSale({
-            tokenID: 13,
-            tokenPrice: convertCrystal(10, 'nano')
-        })
-    });
+    let tokens = await ercContract.getUserNfts({ collector: msigWallet.address });
 
-    await msigWallet.transfer({
-        destination: ercContract.address,
-        value: convertCrystal(1, 'nano'),
-        flags: operationFlags.FEE_FROM_CONTRACT_BALANCE,
-        bounce: true,
-        payload: await ercContract.setForSale({
-            tokenID: 12,
-            tokenPrice: convertCrystal(10, 'nano')
-        })
-    });
+    for (let tokenID in tokens) {
+        await msigWallet.transfer({
+            destination: ercContract.address,
+            value: convertCrystal(1, 'nano'),
+            flags: operationFlags.FEE_FROM_CONTRACT_BALANCE,
+            bounce: true,
+            payload: await ercContract.setForSale({
+                tokenID: tokenID,
+                tokenPrice: convertCrystal(10, 'nano')
+            })
+        });
+    }
 
     console.log(await ercContract.getAllTokensForSale());
 
-    await msigWallet.transfer({
-        destination: ercContract.address,
-        value: convertCrystal(11.5, 'nano'),
-        flags: operationFlags.FEE_FROM_CONTRACT_BALANCE,
-        bounce: true,
-        payload: await ercContract.buyToken({
-            tokenID: 13
-        })
-    });
+    // await msigWallet.transfer({
+    //     destination: ercContract.address,
+    //     value: convertCrystal(11.5, 'nano'),
+    //     flags: operationFlags.FEE_FROM_CONTRACT_BALANCE,
+    //     bounce: true,
+    //     payload: await ercContract.buyToken({
+    //         tokenID: 13
+    //     })
+    // });
 
-    console.log(await ercContract.getAllTokensForSale());
+    // console.log(await ercContract.getAllTokensForSale());
 }
 
 main().then(

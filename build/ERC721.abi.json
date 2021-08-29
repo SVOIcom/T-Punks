@@ -199,6 +199,16 @@
 				{"name":"value0","type":"uint128"},
 				{"name":"value1","type":"uint128"}
 			]
+		},
+		{
+			"name": "upgradeContractCode",
+			"inputs": [
+				{"name":"code","type":"cell"},
+				{"name":"updateParams","type":"cell"},
+				{"name":"codeVersion_","type":"uint32"}
+			],
+			"outputs": [
+			]
 		}
 	],
 	"data": [

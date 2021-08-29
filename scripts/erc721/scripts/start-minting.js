@@ -70,7 +70,7 @@ async function main() {
 
         await msigWallet.transfer({
             destination: ercContract.address,
-            value: convertCrystal(100.5, 'nano'),
+            value: convertCrystal(10.5, 'nano'),
             flags: operationFlags.FEE_FROM_CONTRACT_BALANCE,
             bounce: false,
             payload: punkMintPayload

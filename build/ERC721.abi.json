@@ -27,16 +27,6 @@
 			]
 		},
 		{
-			"name": "getOwnerOf",
-			"inputs": [
-				{"name":"_answer_id","type":"uint32"},
-				{"name":"tokenID","type":"uint32"}
-			],
-			"outputs": [
-				{"name":"value0","type":"address"}
-			]
-		},
-		{
 			"name": "mintToken",
 			"inputs": [
 				{"name":"referal","type":"address"}
@@ -95,6 +85,41 @@
 				{"name":"tokenID","type":"uint32"}
 			],
 			"outputs": [
+			]
+		},
+		{
+			"name": "setBuyPrice",
+			"inputs": [
+				{"name":"priceForSale_","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "setReferalParams",
+			"inputs": [
+				{"name":"refNom","type":"uint128"},
+				{"name":"refDenom","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "withdrawExtraTons",
+			"inputs": [
+				{"name":"tonsToWithdraw","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getOwnerOf",
+			"inputs": [
+				{"name":"_answer_id","type":"uint32"},
+				{"name":"tokenID","type":"uint32"}
+			],
+			"outputs": [
+				{"name":"value0","type":"address"}
 			]
 		},
 		{
@@ -166,23 +191,6 @@
 			]
 		},
 		{
-			"name": "setBuyPrice",
-			"inputs": [
-				{"name":"priceForSale_","type":"uint128"}
-			],
-			"outputs": [
-			]
-		},
-		{
-			"name": "setReferalParams",
-			"inputs": [
-				{"name":"refNom","type":"uint128"},
-				{"name":"refDenom","type":"uint128"}
-			],
-			"outputs": [
-			]
-		},
-		{
 			"name": "getReferalParams",
 			"inputs": [
 				{"name":"_answer_id","type":"uint32"}
@@ -190,14 +198,6 @@
 			"outputs": [
 				{"name":"value0","type":"uint128"},
 				{"name":"value1","type":"uint128"}
-			]
-		},
-		{
-			"name": "withdrawExtraTons",
-			"inputs": [
-				{"name":"tonsToWithdraw","type":"uint128"}
-			],
-			"outputs": [
 			]
 		}
 	],

@@ -39,7 +39,7 @@ contract ERC721 is IPunk {
     }
 
     /**
-     * @param tokenID
+     * @param tokenID ID of nft token
      * @param punkInfo Information required for punk
      */
     function uploadToken(uint32 tokenID, Punk punkInfo) external override onlyOwner {
@@ -83,8 +83,8 @@ contract ERC721 is IPunk {
 
     /**
      * @param mintTo Address of future owner
-     * @param amountLeftToMint
-     * @param originalTokenAmount
+     * @param amountLeftToMint Amount of tokens left to mint
+     * @param originalTokenAmount Original amount of tokens that requires to be minted
      */
     function _mintToken(address mintTo, uint32 amountLeftToMint, uint32 originalTokenAmount) external override onlySelf {
         tvm.accept();
@@ -148,8 +148,8 @@ contract ERC721 is IPunk {
     }
 
     /**
-     * @param receiver
-     * @param valueToTransfer
+     * @param receiver Address of payout receiver
+     * @param valueToTransfer Value to transfer using referal program
      */
     function _payoutReferal(address receiver, uint128 valueToTransfer) external override pure onlySelf {
         tvm.accept();
@@ -157,8 +157,8 @@ contract ERC721 is IPunk {
     }
 
     /**
-     * @param tokenID
-     * @param receiver
+     * @param tokenID ID of nft token
+     * @param receiver Address of receiver
      */
     function transferTokenTo(uint32 tokenID, address receiver) external override {
         require(msg.value >= 0.5 ton, ERC721ErrorCodes.ERROR_MSG_VALUE_IS_TOO_LOW);
@@ -182,8 +182,8 @@ contract ERC721 is IPunk {
     }
 
     /**
-     * @param tokenID
-     * @param tokenPrice
+     * @param tokenID ID of nft token
+     * @param tokenPrice Sell price
      */
     function setForSale(uint32 tokenID, uint128 tokenPrice) external override {
         require(msg.value >= 0.5 ton, ERC721ErrorCodes.ERROR_MSG_VALUE_IS_TOO_LOW);
@@ -201,7 +201,7 @@ contract ERC721 is IPunk {
     }
 
     /**
-     * @param tokenID
+     * @param tokenID ID of nft token
      */
     function setAsNotForSale(uint32 tokenID) external override {
         require(msg.value >= 0.5 ton, ERC721ErrorCodes.ERROR_MSG_VALUE_IS_TOO_LOW);
@@ -214,7 +214,7 @@ contract ERC721 is IPunk {
     }
 
     /**
-     * @param tokenID
+     * @param tokenID ID of nft token
      */
     function buyToken(uint32 tokenID) external override {
         require(msg.value >= tokensForSale[tokenID].price, ERC721ErrorCodes.ERROR_MSG_VALUE_IS_TOO_LOW);
@@ -243,8 +243,8 @@ contract ERC721 is IPunk {
     }
 
     /**
-     * @param refNom
-     * @param refDenom
+     * @param refNom reference program nominator
+     * @param refDenom reference program denominator
      */
     function setReferalParams(uint128 refNom, uint128 refDenom) external override onlyOwner {
         tvm.accept();
@@ -254,7 +254,7 @@ contract ERC721 is IPunk {
     }
 
     /**
-     * @param tonsToWithdraw
+     * @param tonsToWithdraw Amount of tons to withdraw
      */
     function withdrawExtraTons(uint128 tonsToWithdraw) external override view onlyOwner {
         tvm.accept();
@@ -262,7 +262,7 @@ contract ERC721 is IPunk {
     }
 
     /**
-     * @param tokenID
+     * @param tokenID ID of nft token
      */
     function getOwnerOf(uint32 tokenID) external override responsible view returns(address) {
         return {flag: 64} nftOwner[tokenID];
@@ -273,7 +273,7 @@ contract ERC721 is IPunk {
     }
 
     /**
-     * @param tokenID
+     * @param tokenID ID of nft token
      */
     function getSellInfo(uint32 tokenID) external override responsible returns(SellPunk) {
         return {value: 0, flag: 64} tokensForSale[tokenID];
@@ -284,14 +284,14 @@ contract ERC721 is IPunk {
     }
 
     /**
-     * @param collector
+     * @param collector Address of nft owner
      */
     function getUserNfts(address collector) external override responsible view returns(mapping(uint32 => bool)) {
         return {flag: 64} collections[collector];
     }
 
     /**
-     * @param nftID
+     * @param nftID ID of nft token
      */
     function getNft(uint32 nftID) external override responsible view returns(Punk, address collector) {
         return {flag: 64} (tokens[nftID], nftOwner[nftID]);

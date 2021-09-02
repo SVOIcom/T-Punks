@@ -13,7 +13,7 @@ struct SellPunk {
 }
 
 interface IPunk {
-    function uploadToken(uint32 tokenID, Punk punkInfo) external;
+    function uploadToken(Punk[] punkInfo) external;
 
     function startSell() external;
     

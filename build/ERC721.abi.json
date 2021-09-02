@@ -1,6 +1,6 @@
 {
 	"ABI version": 2,
-	"header": ["time"],
+	"header": ["time", "expire"],
 	"functions": [
 		{
 			"name": "constructor",
@@ -13,8 +13,24 @@
 		{
 			"name": "uploadToken",
 			"inputs": [
-				{"name":"tokenID","type":"uint32"},
-				{"components":[{"name":"id","type":"uint32"},{"name":"punkType","type":"bytes"},{"name":"attributes","type":"bytes"},{"name":"rank","type":"uint32"}],"name":"punkInfo","type":"tuple"}
+				{"components":[{"name":"id","type":"uint32"},{"name":"punkType","type":"bytes"},{"name":"attributes","type":"bytes"},{"name":"rank","type":"uint32"}],"name":"punkInfo","type":"tuple[]"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "_uploadToken",
+			"inputs": [
+				{"components":[{"name":"id","type":"uint32"},{"name":"punkType","type":"bytes"},{"name":"attributes","type":"bytes"},{"name":"rank","type":"uint32"}],"name":"punkInfo","type":"tuple[]"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "_setTokenAmount",
+			"inputs": [
+				{"name":"tokensLeft_","type":"uint32"},
+				{"name":"totalTokens_","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -89,6 +105,14 @@
 		},
 		{
 			"name": "setBuyPrice",
+			"inputs": [
+				{"name":"priceForSale_","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "setSellPrice",
 			"inputs": [
 				{"name":"priceForSale_","type":"uint128"}
 			],
@@ -183,6 +207,15 @@
 		},
 		{
 			"name": "getTokenPrice",
+			"inputs": [
+				{"name":"_answer_id","type":"uint32"}
+			],
+			"outputs": [
+				{"name":"value0","type":"uint128"}
+			]
+		},
+		{
+			"name": "getTokenSellPrice",
 			"inputs": [
 				{"name":"_answer_id","type":"uint32"}
 			],

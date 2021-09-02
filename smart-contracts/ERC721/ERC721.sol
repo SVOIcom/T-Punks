@@ -1,4 +1,6 @@
 pragma ton-solidity >= 0.43.0;
+pragma AbiHeader time;
+pragma AbiHeader expire;
 
 import './interfaces/IERC721.sol';
 import './interfaces/IUpgradableContract.sol';
@@ -17,6 +19,7 @@ contract ERC721 is IPunk, IUpgradableContract{
     uint128 priceForSale;
     uint128 referalNominator;
     uint128 referalDenominator;
+    uint128 priceForUserSale;
     bool readyForSale;
     mapping(uint32 => address) nftOwner;
     mapping(address => mapping(uint32 => bool)) collections;
@@ -31,26 +34,48 @@ contract ERC721 is IPunk, IUpgradableContract{
         rnd.shuffle();
         readyForSale = false;
         owner = owner_;
-        priceForSale = 1 ton;
+        priceForSale = 200 ton;
         totalTokens = 0;
         tokensLeft = 0;
         nftAmount = 0;
         referalNominator = 10;
         referalDenominator = 100;
+        priceForUserSale = priceForSale;
     }
 
     /**
-     * @param tokenID ID of nft token
      * @param punkInfo Information required for punk
      */
-    function uploadToken(uint32 tokenID, Punk punkInfo) external override onlyOwner {
+    function uploadToken(Punk[] punkInfo) external override onlyOwner {
         tvm.rawReserve(msg.value, 2);
-        if (!freeTokens[tokenID]) {
-            tokens[tokenID] = punkInfo;
-            freeTokens[tokenID] = true;
-            totalTokens += 1;
-            tokensLeft += 1;
+        for (Punk punk: punkInfo) {
+            if (!freeTokens[punk.id]) {
+                tokens[punk.id] = punk;
+                freeTokens[punk.id] = true;
+                totalTokens += 1;
+                tokensLeft += 1;
+            } else {
+                tokens[punk.id] = punk;
+            }
         }
+        address(owner).transfer({value: 0, flag: 64});
+    }
+
+    function _uploadToken(Punk[] punkInfo) external onlyOwner {
+        tvm.rawReserve(msg.value, 2);
+        for (Punk punk: punkInfo) {
+            if (!freeTokens[punk.id]) {
+                tokens[punk.id] = punk;
+                freeTokens[punk.id] = true;
+            }
+        }
+        address(owner).transfer({value: 0, flag: 64});
+    }
+
+    function _setTokenAmount(uint32 tokensLeft_, uint32 totalTokens_) external onlyOwner {
+        tvm.rawReserve(msg.value, 2);
+        totalTokens = totalTokens_;
+        tokensLeft = tokensLeft_;
         address(owner).transfer({value: 0, flag: 64});
     }
 
@@ -206,7 +231,8 @@ contract ERC721 is IPunk, IUpgradableContract{
 
         if (
             (msg.value >= 0.5 ton) &&
-            (nftOwner[tokenID] == msg.sender)
+            (nftOwner[tokenID] == msg.sender) &&
+            (tokenPrice >= priceForUserSale)
         ) {
             if (tokenPrice >= 1 ton) {
                 tokensForSale[tokenID] = SellPunk({
@@ -273,8 +299,14 @@ contract ERC721 is IPunk, IUpgradableContract{
      * @param priceForSale_ Price of minting tokens
      */
     function setBuyPrice(uint128 priceForSale_) external override onlyOwner {
-        tvm.accept();
+        tvm.rawReserve(msg.value, 2);
         priceForSale = priceForSale_;
+        address(owner).transfer({value: 0, flag: 64});
+    }
+
+    function setSellPrice(uint128 priceForSale_) external onlyOwner {
+        tvm.rawReserve(msg.value, 2);
+        priceForUserSale = priceForSale_;
         address(owner).transfer({value: 0, flag: 64});
     }
 
@@ -283,7 +315,7 @@ contract ERC721 is IPunk, IUpgradableContract{
      * @param refDenom reference program denominator
      */
     function setReferalParams(uint128 refNom, uint128 refDenom) external override onlyOwner {
-        tvm.accept();
+        tvm.rawReserve(msg.value, 2);
         referalNominator = refNom;
         referalDenominator = refDenom;
         address(owner).transfer({value: 0, flag: 64});
@@ -341,6 +373,10 @@ contract ERC721 is IPunk, IUpgradableContract{
         return {flag: 64} priceForSale;
     }
 
+    function getTokenSellPrice() external responsible view returns(uint128) {
+        return {flag: 64} priceForUserSale;
+    }
+
     
     function getReferalParams() external override responsible view returns (uint128, uint128) {
         return {flag: 64} (referalNominator, referalDenominator);
@@ -357,32 +393,33 @@ contract ERC721 is IPunk, IUpgradableContract{
         tvm.rawReserve(msg.value, 2);
         TvmBuilder builder;
 
-        builder.store(owner);
-        builder.store(nftAmount);
-        builder.store(tokensLeft);
-        builder.store(totalTokens);
-        builder.store(priceForSale);
-        builder.store(referalNominator);
-        builder.store(referalDenominator);
-        builder.store(readyForSale);
+        // builder.store(owner);
+        // builder.store(nftAmount);
+        // builder.store(tokensLeft);
+        // builder.store(totalTokens);
+        // builder.store(priceForSale);
+        // builder.store(referalNominator);
+        // builder.store(referalDenominator);
+        // builder.store(priceForUserSale);
+        // builder.store(readyForSale);
 
-        TvmBuilder mappingStorage;
-        TvmBuilder nftOwnerB;
-        nftOwnerB.store(nftOwner);
-        TvmBuilder collectionsB;
-        collectionsB.store(collections);
-        TvmBuilder freeTokensB;
-        freeTokensB.store(freeTokens);
-        TvmBuilder tokensForSaleB;
-        tokensForSaleB.store(tokensForSale);
+        // TvmBuilder mappingStorage;
+        // TvmBuilder nftOwnerB;
+        // nftOwnerB.store(nftOwner);
+        // TvmBuilder collectionsB;
+        // collectionsB.store(collections);
+        // TvmBuilder freeTokensB;
+        // freeTokensB.store(freeTokens);
+        // TvmBuilder tokensForSaleB;
+        // tokensForSaleB.store(tokensForSale);
 
-        mappingStorage.store(nftOwnerB.toCell());
-        mappingStorage.store(collectionsB.toCell());
-        mappingStorage.store(freeTokensB.toCell());
-        mappingStorage.store(tokensForSaleB.toCell());
+        // mappingStorage.store(nftOwnerB.toCell());
+        // mappingStorage.store(collectionsB.toCell());
+        // mappingStorage.store(freeTokensB.toCell());
+        // mappingStorage.store(tokensForSaleB.toCell());
 
-        builder.store(updateParams);
-        builder.store(mappingStorage.toCell());
+        // builder.store(updateParams);
+        // builder.store(mappingStorage.toCell());
 
         tvm.setcode(code);
         tvm.setCurrentCode(code);
@@ -391,29 +428,30 @@ contract ERC721 is IPunk, IUpgradableContract{
     }
 
     function onCodeUpgrade(TvmCell oldVariables) private {
-        tvm.resetStorage();
-        TvmSlice upgrd = oldVariables.toSlice();
-        (
-            owner,
-            nftAmount,
-            tokensLeft,
-            totalTokens,
-            priceForSale,
-            referalNominator,
-            referalDenominator,
-            readyForSale
-        ) = upgrd.decode(address, uint32, uint32, uint32, uint128, uint128, uint128, bool);
+        // tvm.resetStorage();
+        // TvmSlice upgrd = oldVariables.toSlice();
+        // (
+        //     owner,
+        //     nftAmount,
+        //     tokensLeft,
+        //     totalTokens,
+        //     priceForSale,
+        //     referalNominator,
+        //     referalDenominator,
+        //     priceForUserSale,
+        //     readyForSale
+        // ) = upgrd.decode(address, uint32, uint32, uint32, uint128, uint128, uint128, uint128, bool);
 
-        TvmCell params = upgrd.loadRef();
-        TvmSlice mappings = upgrd.loadRefAsSlice();
-        TvmSlice tmp = mappings.loadRefAsSlice();
-        nftOwner = tmp.decode(mapping(uint32 => address));
-        tmp = mappings.loadRefAsSlice();
-        collections = tmp.decode(mapping(address => mapping(uint32 => bool)));
-        tmp = mappings.loadRefAsSlice();
-        freeTokens = tmp.decode(mapping(uint32 => bool));
-        tmp = mappings.loadRefAsSlice(); 
-        tokensForSale = tmp.decode(mapping(uint32 => SellPunk));
+        // TvmCell params = upgrd.loadRef();
+        // TvmSlice mappings = upgrd.loadRefAsSlice();
+        // TvmSlice tmp = mappings.loadRefAsSlice();
+        // nftOwner = tmp.decode(mapping(uint32 => address));
+        // tmp = mappings.loadRefAsSlice();
+        // collections = tmp.decode(mapping(address => mapping(uint32 => bool)));
+        // tmp = mappings.loadRefAsSlice();
+        // freeTokens = tmp.decode(mapping(uint32 => bool));
+        // tmp = mappings.loadRefAsSlice(); 
+        // tokensForSale = tmp.decode(mapping(uint32 => SellPunk));
     }
 
 

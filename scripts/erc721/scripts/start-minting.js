@@ -3,7 +3,7 @@ const configuration = require("../../scripts.conf");
 const initializeLocklift = require("../../utils/initializeLocklift");
 const { loadContractData } = require("../../utils/migration/manageContractData");
 const { operationFlags } = require("../../utils/transferFlags");
-const { stringToBytesArray } = require("../../utils/utils");
+const { stringToBytesArray, encodeMessageBody } = require("../../utils/utils");
 const { extendContractToWallet, MsigWallet } = require("../../wallet/modules/walletWrapper");
 const { extendContractToERC721, ERC721 } = require("../modules/extendContractToERC721");
 
@@ -37,29 +37,45 @@ async function main() {
     //     keyPair: msigWallet.keyPair
     // });
 
-    let startMinting = await ercContract.startSell();
+    // await msigWallet.transfer({
+    //     destination: ercContract.address,
+    //     value: convertCrystal(1, 'nano'),
+    //     flags: operationFlags.FEE_FROM_CONTRACT_BALANCE,
+    //     bounce: true,
+    //     payload: await ercContract.setBuyPrice({
+    //         priceForSale_: convertCrystal(200, 'nano')
+    //     })
+    // });
 
-    await msigWallet.transfer({
-        destination: ercContract.address,
-        value: convertCrystal(1, 'nano'),
-        flags: operationFlags.FEE_FROM_CONTRACT_BALANCE,
-        bounce: false,
-        payload: startMinting
-    });
+    // await msigWallet.transfer({
+    //     destination: ercContract.address,
+    //     value: convertCrystal(1, 'nano'),
+    //     flags: operationFlags.FEE_FROM_CONTRACT_BALANCE,
+    //     bounce: true,
+    //     payload: await encodeMessageBody({
+    //         contract: ercContract,
+    //         functionName: 'setSellPrice',
+    //         input: {
+    //             priceForSale_: convertCrystal(200, 'nano')
+    //         }
+    //     })
+    // });
 
-    let pricePayload = await ercContract.setBuyPrice({
-        priceForSale_: convertCrystal(2, 'nano')
-    });
+    // await msigWallet.transfer({
+    //     destination: ercContract.address,
+    //     value: convertCrystal(1, 'nano'),
+    //     flags: operationFlags.FEE_FROM_CONTRACT_BALANCE,
+    //     bounce: false,
+    //     payload: await ercContract.startSell()
+    // });
 
-    await msigWallet.transfer({
-        destination: ercContract.address,
-        value: convertCrystal(1, 'nano'),
-        flags: operationFlags.FEE_FROM_CONTRACT_BALANCE,
-        bounce: true,
-        payload: pricePayload
-    });
+    // console.log(await ercContract.getTokenPrice());
 
-
+    // console.log(await ercContract.call({
+    //     method: 'getTokenSellPrice',
+    //     params: {},
+    //     keyPair: msigWallet.keyPair
+    // }));
 
     let uploadCount = 1;
 
@@ -70,9 +86,9 @@ async function main() {
 
         await msigWallet.transfer({
             destination: ercContract.address,
-            value: convertCrystal(10.5, 'nano'),
+            value: convertCrystal(200.5, 'nano'),
             flags: operationFlags.FEE_FROM_CONTRACT_BALANCE,
-            bounce: false,
+            bounce: true,
             payload: punkMintPayload
         });
     }

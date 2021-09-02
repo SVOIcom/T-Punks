@@ -2,7 +2,7 @@ const Contract = require('locklift/locklift/contract');
 const { encodeMessageBody } = require('../../utils/utils');
 
 class ERC721 extends Contract {
-    async uploadToken({ tokenID, punkInfo }) {}
+    async uploadToken({ punkInfo }) {}
 
     async startSell() {}
 
@@ -51,7 +51,6 @@ function extendContractToERC721(contract) {
             contract: contract,
             functionName: 'uploadToken',
             input: {
-                tokenID,
                 punkInfo
             }
         });

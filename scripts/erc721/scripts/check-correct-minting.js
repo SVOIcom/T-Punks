@@ -7,6 +7,8 @@ const { stringToBytesArray } = require("../../utils/utils");
 const { extendContractToWallet, MsigWallet } = require("../../wallet/modules/walletWrapper");
 const { extendContractToERC721, ERC721 } = require("../modules/extendContractToERC721");
 
+const fs = require('fs');
+
 async function main() {
     let locklift = await initializeLocklift(configuration.pathToLockliftConfig, configuration.network);
 
@@ -22,26 +24,40 @@ async function main() {
     let ercContract = await loadContractData(locklift, configuration, `${configuration.network}_ERC721.json`);
     ercContract = extendContractToERC721(ercContract);
 
-    console.log(await ercContract.getTokenPrice());
+    console.log(await ercContract.getOwnerOf({
+        tokenID: 7523
+    }));
 
-    console.log(await ercContract.getTokenSupplyInfo());
+    console.log(await ercContract.getSellInfo({
+        tokenID: 7523
+    }))
 
-    console.log(Object.keys(await ercContract.getAllNfts()).length);
+    // console.log(await ercContract.getTokenPrice());
 
-    console.log(await ercContract.getNft({ nftID: 0 }));
+    // console.log(await ercContract.getTokenSupplyInfo());
 
-    console.log(await ercContract.getOwnerOf({ tokenID: 0 }));
+    // console.log(Object.keys(await ercContract.getAllNfts()).length);
 
-    console.log(await ercContract.getUserNfts({ collector: msigWallet.address }));
+    // console.log(await ercContract.getNft({ nftID: 0 }));
 
-    console.log(Object.keys(await ercContract.getUserNfts({ collector: msigWallet.address })).length);
+    // console.log(await ercContract.getOwnerOf({ tokenID: 0 }));
 
-    // let result = await ercContract.getUserNfts({ collector: msigWallet.address });
-    // for (let i = 0; i < 1; i++) {
+    // console.log(await ercContract.getUserNfts({ collector: msigWallet.address }));
+
+    // console.log(Object.keys(await ercContract.getUserNfts({ collector: msigWallet.address })).length);
+
+    // fs.writeFileSync('uploaded.json', JSON.stringify(await ercContract.getAllNfts(), null, '\t'));
+
+    // let result = await ercContract.getAllNfts();
+    // let notUploaded = 0;
+    // for (let i = 0; i < 10000; i++) {
     //     if (!result[i]) {
-    //         console.log(`${i} - not minted`)
+    //         notUploaded += 1;
+    //         console.log(`${i} - not uploaded`)
     //     }
     // }
+
+    // console.log(`Not uploaded: ${notUploaded}`);
 }
 
 main().then(

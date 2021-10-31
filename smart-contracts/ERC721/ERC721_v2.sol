@@ -2,14 +2,14 @@ pragma ton-solidity >= 0.43.0;
 pragma AbiHeader time;
 pragma AbiHeader expire;
 
-import './interfaces/IERC721.sol';
+import './interfaces/IERC721_v2.sol';
 import './interfaces/IUpgradableContract.sol';
 
 import './libraries/ERC721ErrorCodes.sol';
 
 // TODO: рефералка на перевод % с тонов
 
-contract ERC721 is IPunk, IUpgradableContract{
+contract ERC721 is IPunk, ITPunksCallbacks, IUpgradableContract{
     mapping(uint32 => Punk) tokens;
     address owner;
     uint32 nftAmount;
@@ -217,6 +217,61 @@ contract ERC721 is IPunk, IUpgradableContract{
         }
 
         address(msg.sender).transfer({flag: 64, value: 0});
+    }
+
+    function transferNFTToContract(address contractAddress, uint32 punkId, TvmCell payload) external override {
+        require(msg.value >= 2 ton);
+        require(nftOwner[punkId] == msg.sender);
+        tvm.rawReserve(msg.value, 2);
+
+        collections[msg.sender][punkId] = false;
+
+        nftOwner[punkId] = contractAddress;
+
+        collections[contractAddress][punkId] = true;
+
+        if (tokensForSale[punkId].price != 0) {
+            delete tokensForSale[punkId];
+        }
+
+        emit PunkTransferred({
+            punkId: punkId,
+            from: msg.sender,
+            to: contractAddress,
+            transferTime: uint64(now)
+        }); 
+
+        INFTReceiver(contractAddress).receiveNFT{
+            value: 0,
+            flag: 64
+        }(msg.sender, tokens[punkId], payload);
+    }
+
+    function transferNFTFromContract(address receiver, uint32 punkId, TvmCell payload) external override {
+        require(nftOwner[punkId] == msg.sender);
+        tvm.rawReserve(msg.value, 2);
+
+        collections[msg.sender][punkId] = false;
+
+        nftOwner[punkId] = receiver;
+
+        collections[receiver][punkId] = true;
+
+        if (tokensForSale[punkId].price != 0) {
+            delete tokensForSale[punkId];
+        }
+
+        emit PunkTransferred({
+            punkId: punkId,
+            from: msg.sender,
+            to: receiver,
+            transferTime: uint64(now)
+        }); 
+
+        address(receiver).transfer({
+            value: 0,
+            flag: 64
+        });
     }
 
     /**

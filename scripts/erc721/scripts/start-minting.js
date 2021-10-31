@@ -47,19 +47,19 @@ async function main() {
     //     })
     // });
 
-    // await msigWallet.transfer({
-    //     destination: ercContract.address,
-    //     value: convertCrystal(1, 'nano'),
-    //     flags: operationFlags.FEE_FROM_CONTRACT_BALANCE,
-    //     bounce: true,
-    //     payload: await encodeMessageBody({
-    //         contract: ercContract,
-    //         functionName: 'setSellPrice',
-    //         input: {
-    //             priceForSale_: convertCrystal(200, 'nano')
-    //         }
-    //     })
-    // });
+    await msigWallet.transfer({
+        destination: ercContract.address,
+        value: convertCrystal(1, 'nano'),
+        flags: operationFlags.FEE_FROM_CONTRACT_BALANCE,
+        bounce: true,
+        payload: await encodeMessageBody({
+            contract: ercContract,
+            functionName: 'setSellPrice',
+            input: {
+                priceForSale_: convertCrystal(500, 'nano')
+            }
+        })
+    });
 
     // await msigWallet.transfer({
     //     destination: ercContract.address,
@@ -77,23 +77,23 @@ async function main() {
     //     keyPair: msigWallet.keyPair
     // }));
 
-    let uploadCount = 1;
+    // let uploadCount = 1;
 
-    for (let currentUpload = 0; currentUpload < uploadCount; currentUpload++) {
-        console.log(`Minting punk: ${currentUpload}`);
-        console.log(`Collection size: ${Object.keys(await ercContract.getUserNfts({ collector: msigWallet.address })).length}`)
-        let punkMintPayload = await ercContract.mintToken({ referal: msigWallet.address });
+    // for (let currentUpload = 0; currentUpload < uploadCount; currentUpload++) {
+    //     console.log(`Minting punk: ${currentUpload}`);
+    //     console.log(`Collection size: ${Object.keys(await ercContract.getUserNfts({ collector: msigWallet.address })).length}`)
+    //     let punkMintPayload = await ercContract.mintToken({ referal: msigWallet.address });
 
-        await msigWallet.transfer({
-            destination: ercContract.address,
-            value: convertCrystal(200.5, 'nano'),
-            flags: operationFlags.FEE_FROM_CONTRACT_BALANCE,
-            bounce: true,
-            payload: punkMintPayload
-        });
-    }
+    //     await msigWallet.transfer({
+    //         destination: ercContract.address,
+    //         value: convertCrystal(200.5, 'nano'),
+    //         flags: operationFlags.FEE_FROM_CONTRACT_BALANCE,
+    //         bounce: true,
+    //         payload: punkMintPayload
+    //     });
+    // }
 
-    console.log(`Collection size: ${Object.keys(await ercContract.getUserNfts({ collector: msigWallet.address })).length}`);
+    // console.log(`Collection size: ${Object.keys(await ercContract.getUserNfts({ collector: msigWallet.address })).length}`);
 }
 
 main().then(

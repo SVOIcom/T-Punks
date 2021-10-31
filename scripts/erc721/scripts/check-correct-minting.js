@@ -24,13 +24,22 @@ async function main() {
     let ercContract = await loadContractData(locklift, configuration, `${configuration.network}_ERC721.json`);
     ercContract = extendContractToERC721(ercContract);
 
+    console.log(await locklift.ton.client.abi.decode_message_body({
+        body: 'te6ccgEBAQEACgAAEDoYAPoAAB1j',
+        is_internal: true,
+        abi: {
+            type: 'Contract',
+            value: ercContract.abi
+        }
+    }));
+
     console.log(await ercContract.getOwnerOf({
         tokenID: 7523
     }));
 
-    console.log(await ercContract.getSellInfo({
-        tokenID: 7523
-    }))
+    // console.log(await ercContract.getSellInfo({
+    //     tokenID: 7523
+    // }))
 
     // console.log(await ercContract.getTokenPrice());
 

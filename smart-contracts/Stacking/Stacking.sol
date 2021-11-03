@@ -5,6 +5,8 @@ import '../utils/TIP3/interfaces/IRootTokenContract.sol';
 
 import '../ERC721/interfaces/IERC721_v2.sol';
 
+import '../ERC721/interfaces/IUpgradableContract.sol';
+
 struct PunkStakeInfo {
     uint32 id;
     uint32 rank;
@@ -49,26 +51,76 @@ library ERRORS {
     uint8 constant NO_REWARD_TO_WITHDRAW = 103;
 }
 
-contract Staking is INFTReceiver {
+contract Staking is INFTReceiver, IUpgradableContract {
 
     uint256 constant improvedPrecision = 1e18;
 
-    address owner;
-    address nft;
+    address public owner;
+    address public nft;
 
     TvmCell empty;
     
-    mapping(address => OwnerStructure) ownerInfo;
-    mapping(uint32 => PoolInfo) pools;
+    mapping(address => OwnerStructure) public ownerInfo;
+    mapping(uint32 => PoolInfo) public pools;
 
-    mapping(address => bool) knownTIP3Roots;
-    mapping(address => uint32) rootsToPools;
+    mapping(address => bool) public knownTIP3Roots;
+    mapping(address => uint32) public rootsToPools;
 
-    mapping(uint256 => RankStruct) rankings;
+    mapping(uint256 => RankStruct) public rankings;
 
     constructor(address _owner) public {
         tvm.accept();
         owner = _owner;
+    }
+
+    function upgradeContractCode(TvmCell code, TvmCell updateParams, uint32 codeVersion_) external override onlyOwner {
+        tvm.rawReserve(msg.value, 2);
+
+        address _owner = owner;
+        address _nft = nft;
+        TvmCell _empty = empty;
+
+        mapping(address => OwnerStructure) _ownerInfo = ownerInfo;
+        mapping(uint32 => PoolInfo) _pools = pools;
+        mapping(address => bool) _knownTIP3Roots = knownTIP3Roots;
+        mapping(address => uint32) _rootsToPools = rootsToPools;
+        mapping(uint256 => RankStruct) _rankings = rankings;
+
+        tvm.setcode(code);
+        tvm.setCurrentCode(code);
+
+        onCodeUpgrade(
+            _owner,
+            _nft,
+            _empty,
+            _ownerInfo,
+            _pools,
+            _knownTIP3Roots,
+            _rootsToPools,
+            _rankings
+        );
+    }
+
+    function onCodeUpgrade(
+        address _owner,
+        address _nft,
+        TvmCell _empty,
+        mapping(address => OwnerStructure) _ownerInfo,
+        mapping(uint32 => PoolInfo) _pools,
+        mapping(address => bool) _knownTIP3Roots,
+        mapping(address => uint32) _rootsToPools,
+        mapping(uint256 => RankStruct) _rankings
+    ) private {
+        tvm.resetStorage();
+
+        owner = _owner;
+        nft = _nft;
+        empty = _empty;
+        ownerInfo = _ownerInfo;
+        pools = _pools;
+        knownTIP3Roots = _knownTIP3Roots;
+        rootsToPools = _rootsToPools;
+        rankings = _rankings;
     }
 
     function setNFTAddress(address _nft) external onlyOwner {
@@ -289,6 +341,12 @@ contract Staking is INFTReceiver {
         tvm.rawReserve(msg.value, 2);
         _updateUserReward(msg.sender, poolId);
         address(msg.sender).transfer({value: 0, flag: 64});
+    }
+
+    function createPoolPayload(uint32 poolId) external returns(TvmCell) {
+        TvmBuilder tb;
+        tb.store(poolId);
+        return tb.toCell();
     }
 
     modifier onlyOwner() {

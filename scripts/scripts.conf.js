@@ -11,7 +11,7 @@
  * @type {ScriptConfiguration}
  */
 const configuration = {
-    network: 'mainnet',
+    network: 'local',
     buildDirectory: './build',
     pathToLockliftConfig: './scripts/l.conf.js'
 }

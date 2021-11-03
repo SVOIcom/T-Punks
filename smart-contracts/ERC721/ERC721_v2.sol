@@ -220,7 +220,7 @@ contract ERC721 is IPunk, ITPunksCallbacks, IUpgradableContract{
     }
 
     function transferNFTToContract(address contractAddress, uint32 punkId, TvmCell payload) external override {
-        require(msg.value >= 2 ton);
+        require(msg.value >= 1 ton);
         require(nftOwner[punkId] == msg.sender);
         tvm.rawReserve(msg.value, 2);
 

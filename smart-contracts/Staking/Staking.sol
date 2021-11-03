@@ -17,6 +17,7 @@ struct UserPoolInfo {
     uint256 stakedTokens;
     uint256 pendingReward;
     uint256 rewardPerTokenSum;
+    uint256 lastRewardWithdrawal;
 }
 
 struct PoolInfo {
@@ -31,6 +32,7 @@ struct PoolInfo {
     uint64 startTime;
     uint64 finishTime;
     uint64 duration;
+    uint64 vestingStart;
     uint64 durationOfRewardWithdrawal;
     uint64 lastRPTSupdate;
 }
@@ -141,6 +143,7 @@ contract Staking is INFTReceiver, IUpgradableContract {
         uint128 _totalReward,
         uint64 _startTime,
         uint64 _finishTime,
+        uint64 _vestingStart,
         uint64 _timeToFinishWithdrawProcess
     ) external onlyOwner {
         tvm.rawReserve(msg.value, 2);
@@ -156,7 +159,8 @@ contract Staking is INFTReceiver, IUpgradableContract {
             startTime: _startTime,
             finishTime: _finishTime,
             duration: _finishTime - _startTime,
-            durationOfRewardWithdrawal: _timeToFinishWithdrawProcess - _startTime,
+            vestingStart: _vestingStart,
+            durationOfRewardWithdrawal: _timeToFinishWithdrawProcess - _vestingStart,
             lastRPTSupdate: 0
         });
 
@@ -213,13 +217,17 @@ contract Staking is INFTReceiver, IUpgradableContract {
         if (ts.hasNBitsAndRefs(32, 0)) {
             (poolId) = ts.decode(uint32);
             if (pools.exists(poolId)) {
-                _depositNFTToPool(_staker, _punk, poolId);
-                address(_staker).transfer({ value: 0, flag: 128 });
+                if (pools[poolId].startTime < uint64(now) && pools[poolId].finishTime > uint64(now)) {
+                    _depositNFTToPool(_staker, _punk, poolId);
+                    address(_staker).transfer({ value: 0, flag: 128 });
+                } else {
+                    _transferPunk(_staker, _punk.id, empty);
+                }
             } else {
-                _transferPunk(_staker, _punk.rank, empty);
+                _transferPunk(_staker, _punk.id, empty);
             }
         } else {
-            _transferPunk(_staker, _punk.rank, empty);
+            _transferPunk(_staker, _punk.id, empty);
         }
     }
 
@@ -227,7 +235,7 @@ contract Staking is INFTReceiver, IUpgradableContract {
         _updateUserReward(sender, poolId);
         PoolInfo pi = pools[poolId];
         uint256 nftValue = _determineNFTValue(_punkInfo.rank);
-        pi.totalStaked += nftValue;
+        pools[poolId].totalStaked += nftValue;
         ownerInfo[sender].punkInfo[_punkInfo.id] = PunkStakeInfo(_punkInfo.id, _punkInfo.rank, poolId);
         ownerInfo[sender].poolInfo[poolId].stakedTokens += nftValue;
     }
@@ -245,9 +253,8 @@ contract Staking is INFTReceiver, IUpgradableContract {
 
     function _withdrawNFTFromPool(address sender, uint32 punkId, uint32 poolId) internal {
         _updateUserReward(sender, poolId);
-        PoolInfo pi = pools[poolId];
         uint256 nftValue = _determineNFTValue(ownerInfo[sender].punkInfo[punkId].rank);
-        pi.totalStaked -= nftValue;
+        pools[poolId].totalStaked -= nftValue;
         ownerInfo[sender].poolInfo[poolId].stakedTokens -= nftValue;
         delete ownerInfo[sender].punkInfo[punkId];
         _transferPunk(sender, punkId, empty);
@@ -262,7 +269,7 @@ contract Staking is INFTReceiver, IUpgradableContract {
     function _updateUserReward(address staker, uint32 poolId) internal {
         PoolInfo pi = pools[poolId];
         pi.rewardPerTokenSum += _getPoolDelta(poolId);
-        pools[poolId].lastRPTSupdate = uint64(now);
+        pi.lastRPTSupdate = uint64(now);
 
         UserPoolInfo upi = ownerInfo[staker].poolInfo[poolId];
         uint128 userRewardDelta = upi.rewardPerTokenSum == 0 ? 0 : uint128((pi.rewardPerTokenSum - upi.rewardPerTokenSum) * upi.stakedTokens / improvedPrecision);
@@ -283,7 +290,9 @@ contract Staking is INFTReceiver, IUpgradableContract {
 
     function _withdrawUserReward(address _staker, uint32 _poolId, address _tip3Wallet) internal {
         uint128 toTransfer = uint128(_getPossibleUserReward(_staker, _poolId));
-        ownerInfo[_staker].poolInfo[_poolId].pendingReward = 0;
+        ownerInfo[_staker].poolInfo[_poolId].pendingReward -= toTransfer;
+        ownerInfo[_staker].poolInfo[_poolId].lastRewardWithdrawal = uint64(now);
+        pools[_poolId].totalPayout += toTransfer; 
         ITONTokenWallet(pools[_poolId].rewardTIP3Wallet).transfer{
             value: 0,
             flag: 128
@@ -318,9 +327,9 @@ contract Staking is INFTReceiver, IUpgradableContract {
     function _getPoolDelta(uint32 poolId) internal view returns (uint256) {
         uint64 time = uint64(now);
         PoolInfo pi = pools[poolId];
-        if (time < pi.lastRPTSupdate) {
+        if (time > pi.lastRPTSupdate) {
             uint64 dt = math.min(time, pi.finishTime) - math.max(pi.startTime, pi.lastRPTSupdate);
-            uint256 rewardPerToken = improvedPrecision * dt * pi.totalReward / pi.duration / pi.totalStaked;
+            uint256 rewardPerToken = improvedPrecision * dt * pi.totalReward / pi.duration / math.max(1, pi.totalStaked);
             return rewardPerToken;
         } else {
             return 0;
@@ -328,13 +337,17 @@ contract Staking is INFTReceiver, IUpgradableContract {
     }
 
     function getUserReward(address _user, uint32 _poolId) external view returns (uint256) {
-        return _getPossibleUserReward(_user, _poolId);
+        return uint64(now) >= pools[_poolId].startTime ? _getPossibleUserReward(_user, _poolId) : 0;
     }
 
     function _getPossibleUserReward(address _staker, uint32 _poolId) internal view returns(uint256) {
         return ownerInfo[_staker].poolInfo[_poolId].pendingReward * (
-            math.max(uint64(now), pools[_poolId].startTime + pools[_poolId].durationOfRewardWithdrawal) - pools[_poolId].startTime
-        ) / pools[_poolId].durationOfRewardWithdrawal;
+            math.min(
+                math.max(
+                    uint64(now), pools[_poolId].vestingStart
+                ), pools[_poolId].vestingStart + pools[_poolId].durationOfRewardWithdrawal
+            ) - math.max(ownerInfo[_staker].poolInfo[_poolId].lastRewardWithdrawal, pools[_poolId].vestingStart)
+        ) / math.max(1, pools[_poolId].durationOfRewardWithdrawal);
     }
 
     function updateReward(uint32 poolId) external {
@@ -347,6 +360,24 @@ contract Staking is INFTReceiver, IUpgradableContract {
         TvmBuilder tb;
         tb.store(poolId);
         return tb.toCell();
+    }
+
+    function withdrawTokens(uint32 _poolId, address _wallet, uint128 _amount) external onlyOwner {
+        require(
+            uint64(now) > pools[_poolId].startTime + pools[_poolId].durationOfRewardWithdrawal
+        );
+        tvm.rawReserve(0, 4);
+        ITONTokenWallet(pools[_poolId].rewardTIP3Wallet).transfer{
+            value: 0,
+            flag: 128
+        }(
+            _wallet,
+            _amount,
+            0,
+            address.makeAddrStd(0, 0),
+            true,
+            empty
+        );
     }
 
     modifier onlyOwner() {

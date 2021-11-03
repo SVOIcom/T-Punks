@@ -3,15 +3,9 @@ const configuration = require("../../scripts.conf");
 const initializeLocklift = require("../../utils/initializeLocklift");
 const { loadContractData } = require("../../utils/migration/manageContractData");
 const { operationFlags } = require("../../utils/transferFlags");
-const { stringToBytesArray, encodeMessageBody } = require("../../utils/utils");
+const { stringToBytesArray } = require("../../utils/utils");
 const { extendContractToWallet, MsigWallet } = require("../../wallet/modules/walletWrapper");
 const { extendContractToERC721, ERC721 } = require("../modules/extendContractToERC721");
-
-function sleep(ms) {
-    return new Promise((resolve) => {
-        setTimeout(resolve, ms);
-    });
-}
 
 async function main() {
     let locklift = await initializeLocklift(configuration.pathToLockliftConfig, configuration.network);
@@ -28,46 +22,18 @@ async function main() {
     let ercContract = await loadContractData(locklift, configuration, `${configuration.network}_ERC721.json`);
     ercContract = extendContractToERC721(ercContract);
 
-    await msigWallet.transfer({
-        destination: ercContract.address,
-        value: convertCrystal(1, 'nano'),
-        flags: operationFlags.FEE_FROM_CONTRACT_BALANCE,
-        bounce: true,
-        payload: await ercContract.setBuyPrice({
-            priceForSale_: convertCrystal(1, 'nano')
-        })
+    let upgradeContractPayload = await ercContract.upgradeContractCode({
+        code: ercContract.code,
+        updateParams: '',
+        codeVersion_: 1
     });
 
     await msigWallet.transfer({
         destination: ercContract.address,
-        value: convertCrystal(1, 'nano'),
+        value: convertCrystal(2, 'nano'),
         flags: operationFlags.FEE_FROM_CONTRACT_BALANCE,
         bounce: true,
-        payload: await encodeMessageBody({
-            contract: ercContract,
-            functionName: 'setSellPrice',
-            input: {
-                priceForSale_: convertCrystal(500, 'nano')
-            }
-        })
-    });
-
-    await msigWallet.transfer({
-        destination: ercContract.address,
-        value: convertCrystal(1, 'nano'),
-        flags: operationFlags.FEE_FROM_CONTRACT_BALANCE,
-        bounce: false,
-        payload: await ercContract.startSell()
-    });
-
-    let punkMintPayload = await ercContract.mintToken({ referal: msigWallet.address });
-
-    await msigWallet.transfer({
-        destination: ercContract.address,
-        value: convertCrystal(200.5, 'nano'),
-        flags: operationFlags.FEE_FROM_CONTRACT_BALANCE,
-        bounce: true,
-        payload: punkMintPayload
+        payload: upgradeContractPayload
     });
 }
 

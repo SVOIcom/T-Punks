@@ -1,5 +1,9 @@
 {
-	"name": "ERC721",
-	"address": "0:77aff3a0486e206cdb8e906d06bb5ef127e10b0ef6f9f674fd001f67371f30fe",
+	"name": "ERC721_v2",
+	"address": "0:9cb713e31fdecce556672783e62d14e304bb2e503e948f6fcf0acb1291fd7ce2",
+	"keyPair": {
+        "public": "1d0bafcaa5a39a39f7567bcd5ddaa556eaa12a4eecc87ea142bd0a991e9cf749",
+        "secret": "e682829f060325cdb06dedb59636f62f11234c0cbe53511580a388b38b4970bd"
+    },
 	"network": "local"
 }

@@ -25,7 +25,7 @@ async function main() {
     const punks = require('../../../punks.json');
 
     let uploadCount = 200;
-    let currentUpload = 9960;
+    let currentUpload = 0;
 
     let internalCounter = 0;
     let punksArray = [];

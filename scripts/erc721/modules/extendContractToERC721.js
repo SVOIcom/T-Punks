@@ -37,6 +37,8 @@ class ERC721 extends Contract {
     async getSellInfo({ tokenID }) {}
 
     async upgradeContractCode({ code, updateParams, codeVersion_ }) {}
+
+    async transferNFTToContract({contractAddress, punkId, payload}) {}
 }
 
 
@@ -219,6 +221,19 @@ function extendContractToERC721(contract) {
             }
         });
     }
+
+    contract.transferNFTToContract = async function({contractAddress, punkId, payload}) {
+        return await encodeMessageBody({
+            contract: contract,
+            functionName: 'transferNFTToContract',
+            input: {
+                contractAddress,
+                punkId,
+                payload
+            }
+        })
+    }
+
     return contract;
 }
 

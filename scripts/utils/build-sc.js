@@ -3,7 +3,7 @@ const configuration = require('../scripts.conf');
 
 const srcDir = './smart-contracts/'
 const contracts = [
-    'ERC721',
+    'Staking',
 ]
 
 async function main() {

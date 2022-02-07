@@ -28,6 +28,8 @@ async function main() {
         codeVersion_: 2
     });
 
+    console.log('payload', upgradeContractPayload)
+
     await msigWallet.transfer({
         destination: ercContract.address,
         value: convertCrystal(2, 'nano'),
@@ -39,9 +41,9 @@ async function main() {
 
 main().then(
     () => process.exit(0)
-)/*.catch(
+).catch(
     (err) => {
         console.log(err);
         process.exit(1);
     }
-)*/
+)

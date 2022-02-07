@@ -1,0 +1,9 @@
+{
+    "name": "SafeMultisigWallet",
+    "address": "0:0e29859febd5df2ae4da038a8859456d7bc3ad1451deb89bde67e3639256d375",
+    "keyPair": {
+        "public": "9272f6a18e16ba670f011e7473f41f948871541936506aa775e52c11a88f2f71",
+        "secret": "1e641eed378ba16bd3440f457c3812280e5dd34b3684b55ef433f9ad22fb4579"
+    },
+    "network": "mainnet"
+}

@@ -1,9 +1,9 @@
 const { execSync } = require('child_process');
 const configuration = require('../scripts.conf');
 
-const srcDir = './smart-contracts/src'
+const srcDir = './smart-contracts/'
 const contracts = [
-    'erc721',
+    'ERC721',
 ]
 
 async function main() {

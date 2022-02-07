@@ -328,7 +328,15 @@ contract Staking is INFTReceiver, IUpgradableContract {
         uint64 time = uint64(now);
         PoolInfo pi = pools[poolId];
         if (time > pi.lastRPTSupdate) {
-            uint64 dt = math.min(time, pi.finishTime) - math.max(pi.startTime, pi.lastRPTSupdate);
+
+            //Hotfix 07.02.22
+            unit64 deltaLeft = math.min(time, pi.finishTime);
+            uint64 deltaRight = math.max(pi.startTime, pi.lastRPTSupdate);
+            if(deltaLeft < deltaRight){
+                return 0;
+            }
+
+            uint64 dt = deltaLeft - deltaRight;
             uint256 rewardPerToken = improvedPrecision * dt * pi.totalReward / pi.duration / math.max(1, pi.totalStaked);
             return rewardPerToken;
         } else {

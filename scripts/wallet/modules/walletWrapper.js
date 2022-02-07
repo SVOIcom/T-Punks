@@ -26,6 +26,7 @@ class MsigWallet extends Contract {
  */
 function extendContractToWallet(contract) {
     contract.transfer = async function({ destination, value, flags, bounce, payload }) {
+        console.log('transfer', { destination, value, flags, bounce, payload });
         return await contract.run({
             method: 'sendTransaction',
             params: {

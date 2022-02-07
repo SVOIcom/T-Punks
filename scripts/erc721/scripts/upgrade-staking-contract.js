@@ -25,7 +25,7 @@ async function main() {
     let upgradeContractPayload = await ercContract.upgradeContractCode({
         code: ercContract.code,
         updateParams: '',
-        codeVersion_: 2
+        codeVersion_: 3
     });
 
     console.log('payload', upgradeContractPayload)

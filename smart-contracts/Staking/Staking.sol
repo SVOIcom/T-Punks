@@ -330,7 +330,7 @@ contract Staking is INFTReceiver, IUpgradableContract {
         if (time > pi.lastRPTSupdate) {
 
             //Hotfix 07.02.22
-            unit64 deltaLeft = math.min(time, pi.finishTime);
+            uint64 deltaLeft = math.min(time, pi.finishTime);
             uint64 deltaRight = math.max(pi.startTime, pi.lastRPTSupdate);
             if(deltaLeft < deltaRight){
                 return 0;

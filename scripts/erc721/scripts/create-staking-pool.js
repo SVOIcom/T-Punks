@@ -8,13 +8,13 @@ const { operationFlags } = require('../../utils/transferFlags');
 const { MsigWallet, extendContractToWallet } = require('../../wallet/modules/walletWrapper')
 
 stakingPoolConfig = {
-    poolId: 2,
-    _rewardTIP3Root: '0:4c5e140ec14fbbd394232568af191b756970bf36b30600e397b30b3e70b0b7b5',
-    _totalReward: 1e13,
-    _startTime: 1635961581,
-    _finishTime: 1635965181,
-    _vestingStart: 1635961581,
-    _timeToFinishWithdrawProcess: 1635968781
+    poolId: 1,
+    _rewardTIP3Root: '0:967c87a81c2ad6a489fe006f831a11ffd8ac5bc6f7dd4e107a27e0e6a7728144',
+    _totalReward: 90000*1e9,
+    _startTime: 1636027089,
+    _finishTime: 1643975889,
+    _vestingStart: 1636027089,
+    _timeToFinishWithdrawProcess: 1643975889
 }
 
 

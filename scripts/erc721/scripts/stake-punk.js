@@ -24,12 +24,12 @@ async function main() {
     ercContract = extendContractToERC721(ercContract);
     
     let poolIdPayload = await staking.createPoolPayload({
-        poolId: 2
+        poolId: 1
     });
 
     let payload = await ercContract.transferNFTToContract({
         contractAddress: staking.address,
-        punkId: 7691,
+        punkId: 1210,
         payload: poolIdPayload
     });
 

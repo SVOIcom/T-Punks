@@ -300,7 +300,7 @@ contract Staking is INFTReceiver, IUpgradableContract {
             _tip3Wallet,
             toTransfer,
             0,
-            address.makeAddrStd(0, 0),
+            _staker,
             true,
             empty
         );
@@ -327,8 +327,16 @@ contract Staking is INFTReceiver, IUpgradableContract {
     function _getPoolDelta(uint32 poolId) internal view returns (uint256) {
         uint64 time = uint64(now);
         PoolInfo pi = pools[poolId];
-        if (time > pi.lastRPTSupdate) {
-            uint64 dt = math.min(time, pi.finishTime) - math.max(pi.startTime, pi.lastRPTSupdate);
+        if (
+            time > pi.lastRPTSupdate
+        ) {
+            uint64 deltaLeft = math.min(time, pi.finishTime);
+            uint64 deltaRight = math.max(pi.startTime, pi.lastRPTSupdate);
+            if(deltaLeft < deltaRight){
+                return 0;
+            }
+
+            uint64 dt = deltaLeft - deltaRight;
             uint256 rewardPerToken = improvedPrecision * dt * pi.totalReward / pi.duration / math.max(1, pi.totalStaked);
             return rewardPerToken;
         } else {
@@ -337,7 +345,17 @@ contract Staking is INFTReceiver, IUpgradableContract {
     }
 
     function getUserReward(address _user, uint32 _poolId) external view returns (uint256) {
-        return uint64(now) >= pools[_poolId].startTime ? _getPossibleUserReward(_user, _poolId) : 0;
+        PoolInfo pi = pools[_poolId];
+        UserPoolInfo upi = ownerInfo[_user].poolInfo[_poolId];
+        return uint64(now) >= pi.startTime ? 
+            (uint128((pi.rewardPerTokenSum - upi.rewardPerTokenSum) * upi.stakedTokens / improvedPrecision) + upi.pendingReward) * (
+            math.min(
+                math.max(
+                    uint64(now), pi.vestingStart
+                ), pi.vestingStart + pi.durationOfRewardWithdrawal
+            ) -  pi.vestingStart
+        ) / math.max(1, pi.durationOfRewardWithdrawal) : 
+        0;
     }
 
     function _getPossibleUserReward(address _staker, uint32 _poolId) internal view returns(uint256) {

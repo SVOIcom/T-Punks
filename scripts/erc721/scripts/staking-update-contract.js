@@ -23,7 +23,7 @@ async function main() {
     let upgradeContractPayload = await staking.upgradeContractCode({
         code: staking.code,
         updateParams: '',
-        codeVersion_: 1
+        codeVersion_: 2
     });
 
     await msigWallet.transfer({

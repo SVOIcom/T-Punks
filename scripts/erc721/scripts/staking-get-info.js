@@ -6,7 +6,7 @@ const { convertCrystal } = require('locklift/locklift/utils');
 const { operationFlags } = require('../../utils/transferFlags');
 const { MsigWallet, extendContractToWallet } = require('../../wallet/modules/walletWrapper');
 
-
+const fs = require('fs');
 
 async function main() {
 
@@ -20,14 +20,18 @@ async function main() {
 
     console.log(await staking.rankings());
 
-    console.log(JSON.stringify(await staking.ownerInfo(), null, '\t'));
+    const output = JSON.stringify(await staking.ownerInfo(), null, '\t');
+    
+    fs.writeFileSync('./output.json', output);
+
+    console.log();
 
     console.log(await staking.pools());
 
-    console.log(await staking.getUserReward({
-        _user: msigWallet.address,
-        _poolId: 2
-    }));
+    console.log(String(await staking.getUserReward({
+        _user: '0:c1f2b2941fe3ed16960c484db49186363ed4bbb7c825a8128f46d787f973ff2b',
+        _poolId: 1
+    })));
 }
 
 main().then(

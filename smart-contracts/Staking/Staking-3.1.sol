@@ -1,7 +1,7 @@
 pragma ton-solidity >= 0.47.0;
 
-import '../utils/TIP3/interfaces/ITONTokenWallet.sol';
-import '../utils/TIP3/interfaces/IRootTokenContract.sol';
+import '../utils/TIP-3.1/interfaces/ITokenWallet.sol';
+import '../utils/TIP-3.1/interfaces/ITokenRoot.sol';
 
 import '../ERC721/interfaces/IERC721_v2.sol';
 
@@ -53,7 +53,7 @@ library ERRORS {
     uint8 constant NO_REWARD_TO_WITHDRAW = 103;
 }
 
-contract Staking is INFTReceiver, IUpgradableContract {
+contract Staking31 is INFTReceiver, IUpgradableContract {
 
     uint256 constant improvedPrecision = 1e18;
 
@@ -173,21 +173,12 @@ contract Staking is INFTReceiver, IUpgradableContract {
     }
 
     function _createTIP3Wallet(address tip3Root) internal view {
-        IRootTokenContract(tip3Root).deployEmptyWallet{
-            value: 1 ton
-        }({
-            deploy_grams: 0.5 ton,
-            wallet_public_key: 0,
-            owner_address: address(this),
-            gas_back_address: owner
-        });
-
-        IRootTokenContract(tip3Root).getWalletAddress{
-            value: 0.5 ton,
+        ITokenRoot(tip3Root).deployWallet{
+            value: 1 ton,
             callback: this.receiveTIP3RewardWalletAddress
         }({
-            wallet_public_key: 0,
-            owner_address: address(this)
+            owner: address(this),
+            deployWalletValue: 0.5 ton
         });
     }
 
@@ -293,16 +284,19 @@ contract Staking is INFTReceiver, IUpgradableContract {
         ownerInfo[_staker].poolInfo[_poolId].pendingReward -= toTransfer;
         ownerInfo[_staker].poolInfo[_poolId].lastRewardWithdrawal = uint64(now);
         pools[_poolId].totalPayout += toTransfer; 
-        ITONTokenWallet(pools[_poolId].rewardTIP3Wallet).transfer{
+        _transferTokens(pools[_poolId].rewardTIP3Wallet, _tip3Wallet, toTransfer, _staker, empty);
+    }
+
+    function _transferTokens(address wallet, address to, uint128 amount, address gasReceiver, TvmCell payload) internal {
+        ITokenWallet(wallet).transferToWallet{
             value: 0,
             flag: 128
         }(
-            _tip3Wallet,
-            toTransfer,
-            0,
-            _staker,
+            amount,
+            to,
+            gasReceiver,
             true,
-            empty
+            payload
         );
     }
 
@@ -389,17 +383,7 @@ contract Staking is INFTReceiver, IUpgradableContract {
             uint64(now) > pools[_poolId].startTime + pools[_poolId].durationOfRewardWithdrawal
         );
         tvm.rawReserve(0, 4);
-        ITONTokenWallet(pools[_poolId].rewardTIP3Wallet).transfer{
-            value: 0,
-            flag: 128
-        }(
-            _wallet,
-            _amount,
-            0,
-            address.makeAddrStd(0, 0),
-            true,
-            empty
-        );
+        _transferTokens(pools[_poolId].rewardTIP3Wallet, _wallet, _amount, owner, empty);
     }
 
     modifier onlyOwner() {

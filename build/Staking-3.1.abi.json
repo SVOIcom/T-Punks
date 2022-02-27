@@ -1,0 +1,203 @@
+{
+	"ABI version": 2,
+	"header": ["time"],
+	"functions": [
+		{
+			"name": "constructor",
+			"inputs": [
+				{"name":"_owner","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "upgradeContractCode",
+			"inputs": [
+				{"name":"code","type":"cell"},
+				{"name":"updateParams","type":"cell"},
+				{"name":"codeVersion_","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "setNFTAddress",
+			"inputs": [
+				{"name":"_nft","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "transferOwnership",
+			"inputs": [
+				{"name":"_newOwner","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "addPool",
+			"inputs": [
+				{"name":"poolId","type":"uint32"},
+				{"name":"_rewardTIP3Root","type":"address"},
+				{"name":"_totalReward","type":"uint128"},
+				{"name":"_startTime","type":"uint64"},
+				{"name":"_finishTime","type":"uint64"},
+				{"name":"_vestingStart","type":"uint64"},
+				{"name":"_timeToFinishWithdrawProcess","type":"uint64"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "receiveTIP3RewardWalletAddress",
+			"inputs": [
+				{"name":"rewardTIP3Wallet","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "uploadRankingInfo",
+			"inputs": [
+				{"components":[{"name":"low","type":"uint32"},{"name":"high","type":"uint32"}],"name":"_rankings","type":"map(uint256,tuple)"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "receiveNFT",
+			"inputs": [
+				{"name":"_staker","type":"address"},
+				{"components":[{"name":"id","type":"uint32"},{"name":"punkType","type":"bytes"},{"name":"attributes","type":"bytes"},{"name":"rank","type":"uint32"}],"name":"_punk","type":"tuple"},
+				{"name":"payload","type":"cell"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "withdrawFromStaking",
+			"inputs": [
+				{"name":"poolId","type":"uint32"},
+				{"name":"punkId","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "updateUserReward",
+			"inputs": [
+				{"name":"poolId","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "withdrawUserReward",
+			"inputs": [
+				{"name":"poolId","type":"uint32"},
+				{"name":"userTip3Wallet","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getUserReward",
+			"inputs": [
+				{"name":"_user","type":"address"},
+				{"name":"_poolId","type":"uint32"}
+			],
+			"outputs": [
+				{"name":"value0","type":"uint256"}
+			]
+		},
+		{
+			"name": "updateReward",
+			"inputs": [
+				{"name":"poolId","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "createPoolPayload",
+			"inputs": [
+				{"name":"poolId","type":"uint32"}
+			],
+			"outputs": [
+				{"name":"value0","type":"cell"}
+			]
+		},
+		{
+			"name": "withdrawTokens",
+			"inputs": [
+				{"name":"_poolId","type":"uint32"},
+				{"name":"_wallet","type":"address"},
+				{"name":"_amount","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "owner",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"owner","type":"address"}
+			]
+		},
+		{
+			"name": "nft",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"nft","type":"address"}
+			]
+		},
+		{
+			"name": "ownerInfo",
+			"inputs": [
+			],
+			"outputs": [
+				{"components":[{"components":[{"name":"id","type":"uint32"},{"name":"rank","type":"uint32"},{"name":"poolId","type":"uint32"}],"name":"punkInfo","type":"map(uint32,tuple)"},{"components":[{"name":"stakedTokens","type":"uint256"},{"name":"pendingReward","type":"uint256"},{"name":"rewardPerTokenSum","type":"uint256"},{"name":"lastRewardWithdrawal","type":"uint256"}],"name":"poolInfo","type":"map(uint32,tuple)"}],"name":"ownerInfo","type":"map(address,tuple)"}
+			]
+		},
+		{
+			"name": "pools",
+			"inputs": [
+			],
+			"outputs": [
+				{"components":[{"name":"rewardTIP3Root","type":"address"},{"name":"rewardTIP3Wallet","type":"address"},{"name":"rewardPerTokenSum","type":"uint256"},{"name":"totalReward","type":"uint256"},{"name":"totalPayout","type":"uint256"},{"name":"totalStaked","type":"uint256"},{"name":"startTime","type":"uint64"},{"name":"finishTime","type":"uint64"},{"name":"duration","type":"uint64"},{"name":"vestingStart","type":"uint64"},{"name":"durationOfRewardWithdrawal","type":"uint64"},{"name":"lastRPTSupdate","type":"uint64"}],"name":"pools","type":"map(uint32,tuple)"}
+			]
+		},
+		{
+			"name": "knownTIP3Roots",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"knownTIP3Roots","type":"map(address,bool)"}
+			]
+		},
+		{
+			"name": "rootsToPools",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"rootsToPools","type":"map(address,uint32)"}
+			]
+		},
+		{
+			"name": "rankings",
+			"inputs": [
+			],
+			"outputs": [
+				{"components":[{"name":"low","type":"uint32"},{"name":"high","type":"uint32"}],"name":"rankings","type":"map(uint256,tuple)"}
+			]
+		}
+	],
+	"data": [
+	],
+	"events": [
+	]
+}
